@@ -1,0 +1,6 @@
+Get
+get-pip.bat
+get-pip.py
+
+double click on get-pip.bat
+run pip install xlrd
