@@ -72,12 +72,13 @@ def funcExcelIndivdualOutput():
     excel_list = [f for f in listdir(mainfolderpath) if f.endswith('.xlsx') or f.endswith('.xlsm') ]
     for filename in excel_list:
         print('Converting: ' + filename)
-        exportexcel = pd.read_excel(filename, sheetname, index_col =None)
+        exportexcel = pd.read_excel(filename, sheetname, index_col =None, dtype=str)
         exportexcel.to_csv(mainfolderpath + "\\" + "CSV_OUTPUT" + "\\" + os.path.splitext(filename)[0] + ".csv", index=False, encoding='utf-8-sig') 
 
 def funcExcelIndividualOutputSubfolders():
     #Convert all excels in a subfolder into individual csv outputs /Radionumber (5) 
     excel_list = []
+    os.chdir(mainfolderpath)
     for directoryname,subdirectorynames, filesnames in os.walk(mainfolderpath):
             for subdirectoryname in subdirectorynames:
                 if subdirectoryname == "CSV_OUTPUT": continue
@@ -90,7 +91,7 @@ def funcExcelIndividualOutputSubfolders():
                 excel_list = [f for f in listdir(mainfolderpath + "\\" + subdirectoryname) if f.endswith('.xlsx') or f.endswith('.xlsm') ]
                 for filename in excel_list:
                     print('Converting: ' + filename)
-                    exportexcel = pd.read_excel(filename, sheetname, index_col =None)
+                    exportexcel = pd.read_excel(filename, sheetname, index_col =None, dtype=str)
                     exportexcel.to_csv(mainfolderpath + "\\" + "CSV_OUTPUT" + "\\" + subdirectoryname + "\\" + os.path.splitext(filename)[0] + ".csv", index=False, encoding='utf-8-sig')
             break
 
@@ -107,7 +108,7 @@ def funcExcelAppendedIndividualOutput():
     excel_list = [f for f in listdir(mainfolderpath) if f.endswith('.xlsx') or f.endswith('.xlsm') ]
     for filename in excel_list:
         print('Converting: ' + filename)
-        exportexcel = pd.read_excel(filename, sheetname, index_col =None) 
+        exportexcel = pd.read_excel(filename, sheetname, index_col =None, dtype=str) 
         excel_df = excel_df.append(exportexcel)
     excel_df.to_csv(mainfolderpath + "\\" + "CSV_OUTPUT" + "\\" + "DATA_" + os.path.basename(mainfolderpath) + ".csv", index=False, encoding='utf-8-sig')
 
@@ -115,6 +116,7 @@ def funcExcelAppendedOutputSubfolders():
     #Convert all excels in subfolders to 1 csv output (6)
     excel_list = []
     excel_df = pd.DataFrame()
+    os.chdir(mainfolderpath)
     for directoryname,subdirectorynames, filesnames in os.walk(mainfolderpath):
             for subdirectoryname in subdirectorynames:
                 if subdirectoryname == "CSV_OUTPUT": continue
@@ -127,13 +129,14 @@ def funcExcelAppendedOutputSubfolders():
                 excel_list = [f for f in listdir(mainfolderpath + "\\" + subdirectoryname) if f.endswith('.xlsx') or f.endswith('.xlsm') ]
                 for filename in excel_list:
                     print('Converting: ' + filename)
-                    exportexcel = pd.read_excel(filename, sheetname, index_col =None) 
+                    exportexcel = pd.read_excel(filename, sheetname, index_col =None, dtype=str) 
                     excel_df = excel_df.append(exportexcel)
                     
                 print("Appending file...")
                 excel_df.to_csv(mainfolderpath + "\\" + "CSV_OUTPUT" + "\\" + subdirectoryname + "\\" + "DATA_" + subdirectoryname + ".csv", index=False, encoding='utf-8-sig')
             break
 #========================================================= USER INPUT WITH TK GUI  =============================================================================
+selectedvalue = 0 # need to put this here
 ### Define Tk GUI functions
 def click():
     input1 = str(txtFolderPath.get()).strip()
@@ -206,7 +209,7 @@ lblBuffer = tk.Label
 lblBuffer(mainwindow, text = "Perform operations on multiple subfolders:", bg = "grey", fg="White", font ="none 12 bold") .grid(row=10, column=0,sticky = "nw")
 
 rbFunctionSelect(mainwindow,text = "(4) CSV: Append all CSV's in all subfolders into 1 CSV file per subfolder", variable = intSelectedValue, value =4,indicatoron=1, font ="none 11",anchor=tk.W,relief = "sunken",width = 58).grid(row=11,column=0,sticky = tk.NW)
-rbFunctionSelect(mainwindow,text = "(5) EXCEL Convert all EXCEL files in all subfolders into 1 CSV file per subfolder ", variable = intSelectedValue, value =5,indicatoron=1, font ="none 11",anchor=tk.W,relief = "sunken",width = 58).grid(row=12,column=0,sticky = tk.NW)
+rbFunctionSelect(mainwindow,text = "(5) EXCEL Convert all EXCEL files in subfolders to individual CSV files", variable = intSelectedValue, value =5,indicatoron=1, font ="none 11",anchor=tk.W,relief = "sunken",width = 58).grid(row=12,column=0,sticky = tk.NW)
 rbFunctionSelect(mainwindow,text = "(6) EXCEL: Convert all EXCEL files in all subfolders into 1 CSV file per subfolder", variable = intSelectedValue, value =6,indicatoron=1, font ="none 11",anchor=tk.W,relief = "sunken",width = 58).grid(row=13,column=0,sticky = tk.NW)
 #visual buffer
 lblBuffer = tk.Label
@@ -226,7 +229,7 @@ btnCancel = tk.Button(mainwindow,text = "CANCEL", width = 8, command = exit_butt
 ### WIndow loop
 mainwindow.mainloop()
 #========================================================= EXECUTE PROGRAM  =============================================================================
-#If Statment to go through selected option
+#If Statment to go through selected option, including basic error handling
 try:
     if selectedvalue == 1:
         funcCSVOneFolder()
@@ -256,11 +259,12 @@ except FileNotFoundError:
     messagebox.showerror("Error", "The inputed Folder path was not found or does not exist. Please confirm and try again")
     messagewindow.destroy()
 except Exception as error: # catches built in exceptions and ignores KeyboardInterrupt, SystemExit, and GeneratorExit
-    print("Unknown Error!. Please try again")
+    print("Unknown Error! Please try again")
     messagewindow = tk.Tk()
     messagewindow.withdraw()
+    print(str(error.with_traceback))
     # message box display
-    messagebox.showerror("Error", "Unknown Error!. Please try again. Description: " + str(error))
+    messagebox.showerror("Error", 'Unknown Error!. Please try again. \n(Description: ' + str(error) + ' )')
     messagewindow.destroy()
 else:
-    print("Program completed succesfully")
+    print("Program completed without any errors")
